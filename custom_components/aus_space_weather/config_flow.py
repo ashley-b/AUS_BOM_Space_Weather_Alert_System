@@ -37,13 +37,15 @@ class SpaceWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         )
                     else:
                         errors["base"] = "invalid_api_key"
+                        _LOGGER.error("API key validation failed: No 'data' in response")
                 else:
                     errors["base"] = "invalid_api_key"
+                    _LOGGER.error(f"API key validation failed: HTTP {response.status}")
             except Exception as e:
                 _LOGGER.error(f"Error validating API key: {e}")
                 errors["base"] = "unknown_error"
 
-        # Show the form to the user without 'description' for compatibility
+        # Show the form to the user with a description placeholder
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema({
@@ -56,6 +58,9 @@ class SpaceWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ),
             }),
             errors=errors,
+            description_placeholders={
+                "register_url": "https://sws-data.sws.bom.gov.au/register"
+            },
         )
 
     @staticmethod
@@ -92,4 +97,7 @@ class SpaceWeatherOptionsFlow(config_entries.OptionsFlow):
                     )
                 ),
             }),
+            description_placeholders={
+                "register_url": "https://sws-data.sws.bom.gov.au/register"
+            },
         )

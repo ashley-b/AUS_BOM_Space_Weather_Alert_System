@@ -31,10 +31,15 @@ class SpaceWeatherIndexSensor(CoordinatorEntity, SensorEntity):
     def state(self):
         """Return the sensor state."""
         data = self.coordinator.data.get(self._endpoint)
+        _LOGGER.debug(f"Raw data for {self._endpoint}: {data}")
         if not data or not isinstance(data, list) or len(data) == 0:
             _LOGGER.error(f"No valid data for {self._endpoint}: {data}")
             return None
         first_item = data[0]
+        # Handle nested list structure (e.g., [[{"index": "15", ...}]])
+        if isinstance(first_item, list) and len(first_item) > 0:
+            first_item = first_item[0]
+            _LOGGER.debug(f"Adjusted first_item for {self._endpoint} (nested list): {first_item}")
         if not isinstance(first_item, dict):
             _LOGGER.error(f"Unexpected data structure for {self._endpoint}: {first_item}")
             return None
@@ -43,7 +48,12 @@ class SpaceWeatherIndexSensor(CoordinatorEntity, SensorEntity):
         if index is None:
             _LOGGER.error(f"No 'index' or 'value' key in data for {self._endpoint}: {first_item}")
             return None
-        return index
+        # Convert index to int if possible (since API returns it as a string)
+        try:
+            return int(index)
+        except (ValueError, TypeError):
+            _LOGGER.warning(f"Index value for {self._endpoint} is not an integer: {index}")
+            return index
 
     @property
     def available(self):
@@ -52,6 +62,9 @@ class SpaceWeatherIndexSensor(CoordinatorEntity, SensorEntity):
         if not data or not isinstance(data, list) or len(data) == 0:
             return False
         first_item = data[0]
+        # Handle nested list structure
+        if isinstance(first_item, list) and len(first_item) > 0:
+            first_item = first_item[0]
         if not isinstance(first_item, dict):
             return False
         return "index" in first_item or "value" in first_item
@@ -60,6 +73,12 @@ class SpaceWeatherIndexSensor(CoordinatorEntity, SensorEntity):
     def extra_state_attributes(self):
         """Return additional state attributes."""
         data = self.coordinator.data.get(self._endpoint)
-        if data and isinstance(data, list) and len(data) > 0 and isinstance(data[0], dict):
-            return {"valid_time": data[0].get("valid_time")}
-        return {}
+        if not data or not isinstance(data, list) or len(data) == 0:
+            return {}
+        first_item = data[0]
+        # Handle nested list structure
+        if isinstance(first_item, list) and len(first_item) > 0:
+            first_item = first_item[0]
+        if not isinstance(first_item, dict):
+            return {}
+        return {"valid_time": first_item.get("valid_time")}

@@ -53,43 +53,18 @@ class SpaceWeatherDataCoordinator(DataUpdateCoordinator):
         """Fetch data from all API endpoints in parallel."""
         session = async_get_clientsession(self.hass)
 
+        # Use the user-selected location for all endpoints that require it
         endpoints = [
-            ("get-a-index", {"location": "Australian region"}),
+            ("get-a-index", {"location": self.location}),
             ("get-k-index", {"location": self.location}),
-            ("get-dst-index", {"location": "Australian region"}),
-            ("get-mag-alert", {}),
-            ("get-mag-warning", {}),
-            ("get-aurora-alert", {}),
-            ("get-aurora-watch", {}),
-            ("get-aurora-outlook", {}),
+            ("get-dst-index", {"location": self.location}),
+            ("get-mag-alert", {"location": self.location}),
+            ("get-mag-warning", {"location": self.location}),
+            ("get-aurora-alert", {"location": self.location}),
+            ("get-aurora-watch", {"location": self.location}),
+            ("get-aurora-outlook", {"location": self.location}),
         ]
 
         async def fetch(endpoint, options):
             """Fetch data from a single endpoint."""
-            try:
-                response = await session.post(
-                    f"https://sws-data.sws.bom.gov.au/api/v1/{endpoint}",
-                    json={"api_key": self.api_key, "options": options},
-                    timeout=10,
-                )
-                if response.status == 200:
-                    return await response.json()
-                else:
-                    _LOGGER.error(f"Error fetching {endpoint}: {response.status}")
-                    return None
-            except Exception as e:
-                _LOGGER.error(f"Exception fetching {endpoint}: {e}")
-                return None
-
-        # Fetch all endpoints concurrently
-        results = await asyncio.gather(*[fetch(endpoint, options) for endpoint, options in endpoints])
-
-        # Process results into a dictionary
-        data = {}
-        for (endpoint, _), result in zip(endpoints, results):
-            if result and "data" in result:
-                data[endpoint] = result["data"]
-            else:
-                data[endpoint] = None
-
-        return data
+            try

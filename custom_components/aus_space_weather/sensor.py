@@ -38,16 +38,23 @@ class SpaceWeatherIndexSensor(CoordinatorEntity, SensorEntity):
         if not isinstance(first_item, dict):
             _LOGGER.error(f"Unexpected data structure for {self._endpoint}: {first_item}")
             return None
-        if "index" not in first_item:
-            _LOGGER.error(f"No 'index' key in data for {self._endpoint}: {first_item}")
+        # Check for 'index' key, fall back to 'value' if API structure has changed
+        index = first_item.get("index", first_item.get("value"))
+        if index is None:
+            _LOGGER.error(f"No 'index' or 'value' key in data for {self._endpoint}: {first_item}")
             return None
-        return first_item["index"]
+        return index
 
     @property
     def available(self):
         """Return if the sensor is available."""
         data = self.coordinator.data.get(self._endpoint)
-        return data is not None and isinstance(data, list) and len(data) > 0 and isinstance(data[0], dict) and "index" in data[0]
+        if not data or not isinstance(data, list) or len(data) == 0:
+            return False
+        first_item = data[0]
+        if not isinstance(first_item, dict):
+            return False
+        return "index" in first_item or "value" in first_item
 
     @property
     def extra_state_attributes(self):

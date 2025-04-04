@@ -52,5 +52,41 @@ class SpaceWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ),
             }),
             errors=errors,
-            description="Enter your API key. Register at https://sws-data.sws.bom.gov.au/register if needed.",
+            description="Enter your API key and select a location. Register at https://sws-data.sws.bom.gov.au/register if needed.",
+        )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get the options flow for this handler."""
+        return SpaceWeatherOptionsFlow(config_entry)
+
+class SpaceWeatherOptionsFlow(config_entries.OptionsFlow):
+    """Handle options flow for Australian Space Weather integration."""
+
+    def __init__(self, config_entry):
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(self, user_input=None):
+        """Manage the options."""
+        if user_input is not None:
+            # Update the config entry with new options
+            self.hass.config_entries.async_update_entry(
+                self.config_entry, data={**self.config_entry.data, **user_input}
+            )
+            return self.async_create_entry(title="", data={})
+
+        # Show the form to the user to update API key and location
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema({
+                vol.Required("api_key", default=self.config_entry.data["api_key"]): str,
+                vol.Required("location", default=self.config_entry.data["location"]): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=LOCATIONS,
+                        mode=selector.SelectSelectorMode.DROPDOWN
+                    )
+                ),
+            }),
         )

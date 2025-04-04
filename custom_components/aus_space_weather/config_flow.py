@@ -1,15 +1,18 @@
+import logging
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, selector
 from .const import DOMAIN, LOCATIONS
 
+_LOGGER = logging.getLogger(__name__)
+
 class SpaceWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle the configuration flow for Australian Space Weather integration."""
 
     VERSION = 1
 
-    async def async_show_form(self, user_input=None):
+    async def async_step_user(self, user_input=None):
         """Handle the initial step where the user inputs the API key and location."""
         errors = {}
         if user_input is not None:
@@ -36,10 +39,11 @@ class SpaceWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         errors["base"] = "invalid_api_key"
                 else:
                     errors["base"] = "invalid_api_key"
-            except Exception:
+            except Exception as e:
+                _LOGGER.error(f"Error validating API key: {e}")
                 errors["base"] = "unknown_error"
 
-        # Show the form to the user
+        # Show the form to the user without 'description' for compatibility
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema({
@@ -52,7 +56,6 @@ class SpaceWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ),
             }),
             errors=errors,
-            description="Enter your API key and select a location. Register at https://sws-data.sws.bom.gov.au/register if needed.",
         )
 
     @staticmethod

@@ -1,0 +1,10 @@
+{
+  "domain": "aus_space_weather",
+  "name": "Australian Space Weather",
+  "documentation": "https://github.com/yourusername/aus_space_weather",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": ["@kcoffau"],
+  "iot_class": "cloud_polling",
+  "version": "1.0.0"
+}

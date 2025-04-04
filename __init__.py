@@ -1,0 +1,95 @@
+import asyncio
+from datetime import timedelta
+import logging
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.device_registry import DeviceInfo
+from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
+
+# Device information for grouping entities
+DEVICE_INFO = DeviceInfo(
+    identifiers={(DOMAIN, "australian_space_weather")},
+    name="Australian Space Weather",
+    manufacturer="Bureau of Meteorology",
+    model="Space Weather API",
+)
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up the Australian Space Weather integration from a config entry."""
+    api_key = entry.data["api_key"]
+    location = entry.data["location"]
+
+    # Create and initialize the data coordinator
+    coordinator = SpaceWeatherDataCoordinator(hass, api_key, location)
+    await coordinator.async_config_entry_first_refresh()
+
+    # Store the coordinator in hass.data
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+
+    # Forward setup to sensor and binary_sensor platforms
+    await hass.config_entries.async_forward_entry_setups(entry, ["sensor", "binary_sensor"])
+
+    return True
+
+class SpaceWeatherDataCoordinator(DataUpdateCoordinator):
+    """Coordinator to manage fetching data from the Space Weather API."""
+
+    def __init__(self, hass, api_key, location):
+        """Initialize the coordinator."""
+        self.api_key = api_key
+        self.location = location
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_interval=timedelta(minutes=15),
+        )
+
+    async def _async_update_data(self):
+        """Fetch data from all API endpoints in parallel."""
+        session = async_get_clientsession(self.hass)
+
+        endpoints = [
+            ("get-a-index", {"location": "Australian region"}),
+            ("get-k-index", {"location": self.location}),
+            ("get-dst-index", {"location": "Australian region"}),
+            ("get-mag-alert", {}),
+            ("get-mag-warning", {}),
+            ("get-aurora-alert", {}),
+            ("get-aurora-watch", {}),
+            ("get-aurora-outlook", {}),
+        ]
+
+        async def fetch(endpoint, options):
+            """Fetch data from a single endpoint."""
+            try:
+                response = await session.post(
+                    f"https://sws-data.sws.bom.gov.au/api/v1/{endpoint}",
+                    json={"api_key": self.api_key, "options": options},
+                    timeout=10,
+                )
+                if response.status == 200:
+                    return await response.json()
+                else:
+                    _LOGGER.error(f"Error fetching {endpoint}: {response.status}")
+                    return None
+            except Exception as e:
+                _LOGGER.error(f"Exception fetching {endpoint}: {e}")
+                return None
+
+        # Fetch all endpoints concurrently
+        results = await asyncio.gather(*[fetch(endpoint, options) for endpoint, options in endpoints])
+
+        # Process results into a dictionary
+        data = {}
+        for (endpoint, _), result in zip(endpoints, results):
+            if result and "data" in result:
+                data[endpoint] = result["data"]
+            else:
+                data[endpoint] = None
+
+        return data

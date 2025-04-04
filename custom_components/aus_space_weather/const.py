@@ -1,6 +1,6 @@
 DOMAIN = "aus_space_weather"
 
-# List of supported locations for the K index (based on typical Australian observing sites)
+# List of supported locations for the K index
 LOCATIONS = [
     "Australian region",
     "Hobart",

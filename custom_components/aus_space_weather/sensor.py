@@ -1,5 +1,5 @@
 import logging
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 from . import DEVICE_INFO
@@ -26,6 +26,10 @@ class SpaceWeatherIndexSensor(CoordinatorEntity, SensorEntity):
         self._attr_name = name
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{endpoint}"
         self._attr_device_info = DEVICE_INFO
+        # Set state_class to enable trending/graphing
+        self._attr_state_class = SensorStateClass.MEASUREMENT
+        # Set unit_of_measurement (optional, since A Index is unitless)
+        self._attr_unit_of_measurement = ""  # Unitless index
 
     @property
     def state(self):

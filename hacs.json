@@ -1,3 +1,4 @@
 {
-  "name": "Australian Space Weather"
+  "name": "Australian Space Weather",
+  "content_in_root": false
 }

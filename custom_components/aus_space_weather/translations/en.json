@@ -1,5 +1,5 @@
-"config": {
-  "options": {
+{
+  "config": {
     "step": {
       "init": {
         "description": "Update your API key and location. Register at {register_url} if needed.",
@@ -8,6 +8,10 @@
           "location": "Location"
         }
       }
+    },
+    "error": {
+      "invalid_api_key": "Invalid API key. Please check your API key and try again.",
+      "unknown_error": "An unexpected error occurred. Please try again later."
     }
   }
 }

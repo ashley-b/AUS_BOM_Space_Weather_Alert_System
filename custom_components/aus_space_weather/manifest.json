@@ -2,10 +2,11 @@
   "domain": "aus_space_weather",
   "name": "Australian Space Weather",
   "documentation": "https://github.com/kcoffau/AUS_BOM_Space_Weather_Alert_System",
+  "issue_tracker": "https://github.com/kcoffau/AUS_BOM_Space_Weather_Alert_System/issues",
   "requirements": [],
   "dependencies": [],
   "codeowners": ["@kcoffau"],
   "iot_class": "cloud_polling",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "config_flow": true
 }

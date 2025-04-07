@@ -1,28 +1,13 @@
-{
-  "config": {
+"config": {
+  "options": {
     "step": {
-      "user": {
-        "description": "Enter your API key and select a location. Register at {register_url} if needed.",
+      "init": {
+        "description": "Update your API key and location. Register at {register_url} if needed.",
         "data": {
           "api_key": "API Key",
           "location": "Location"
         }
       }
-    },
-    "options": {
-      "step": {
-        "init": {
-          "description": "Update your API key and location. Register at {register_url} if needed.",
-          "data": {
-            "api_key": "API Key",
-            "location": "Location"
-          }
-        }
-      }
-    },
-    "error": {
-      "invalid_api_key": "Invalid API key. Please check and try again.",
-      "unknown_error": "An unexpected error occurred. Please try again."
     }
   }
 }

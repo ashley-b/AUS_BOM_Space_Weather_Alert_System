@@ -1,5 +1,6 @@
 {
   "name": "Australian Space Weather",
   "render_readme": true,
-  "content_in_root": false
+  "content_in_root": false,
+  "country": AU
 }
